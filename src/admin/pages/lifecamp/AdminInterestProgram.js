@@ -1,257 +1,403 @@
-import React, { useState } from "react";
-import { FaUserGraduate } from "react-icons/fa";
-import { MdPaid } from "react-icons/md";
-import { IoMdCloseCircle } from "react-icons/io";
-import { MdPending } from "react-icons/md";
-// import EditDashboard from "./EditDashboard";
+import React, { useState, useEffect } from "react";
+import { useProspects } from "../../../context/ProspectContext";
+import moment from "moment";
+import Select from "react-select";
+import {
+  MdClose,
+  MdCheck,
+  MdWifiCalling1,
+  MdWifiCalling2,
+  MdWifiCalling3,
+} from "react-icons/md";
+import { FaWhatsapp } from "react-icons/fa";
+import { FcCallback } from "react-icons/fc";
+import SignUpModal from "../../components/SignUpModal";
+import { useProgram } from "../../../context/ProgramContext";
+import axiosInstance from "../../../api/axiosInstance";
 
-const initialFilters = {
+const INITIAL_FILTERS = {
   startDate: "",
   endDate: "",
-  //  branch: "",
-  program: "",
-  // class: "",
+  city_name: "",
+  program_name: "",
   status: "",
-  source:""
+  source: "",
 };
 
-// const tableData = [
-//   { id: 1, name: "Alice", hp: "1234567890", email: "alice@example.com", program: "PS", branch: "PI", class: "A", invitationCode: "ABC123", status: "Active", FU: "FU1", date: "2022-01-01" },
-//   { id: 2, name: "Bob", hp: "2345678901", email: "bob@example.com", program: "SL", branch: "BSD", class: "B", invitationCode: "DEF456", status: "Active", FU: "FU2", date: "2022-02-01" },
-//   { id: 3, name: "Charlie", hp: "3456789012", email: "charlie@example.com", program: "LS", branch: "KG", class: "A", invitationCode: "GHI789", status: "Pending", FU: "FU3", date: "2022-03-01" },
-//   { id: 4, name: "David", hp: "4567890123", email: "david@example.com", program: "PSA", branch: "PI", class: "B", invitationCode: "JKL012", status: "Pending", FU: "FU4", date: "2022-04-01" },
-//   { id: 5, name: "Eve", hp: "5678901234", email: "eve@example.com", program: "PCPS", branch: "BSD", class: "A", invitationCode: "MNO345", status: "Expired", FU: "FU5", date: "2022-05-01" },
-//   { id: 6, name: "Frank", hp: "6789012345", email: "frank@example.com", program: "HP", branch: "KG", class: "B", invitationCode: "PQR678", status: "Expired", FU: "FU6", date: "2022-06-01" },
-//   { id: 7, name: "Grace", hp: "7890123456", email: "grace@example.com", program: "IAY", branch: "PI", class: "A", invitationCode: "STU901", status: "Paid", FU: "FU7", date: "2022-07-01" },
-//   { id: 8, name: "Hank", hp: "8901234567", email: "hank@example.com", program: "PS", branch: "BSD", class: "B", invitationCode: "VWX234", status: "Paid", FU: "FU8", date: "2022-08-01" },
-// ];
-
-const tableData = [
-  { id: 1, name: "Alice", hp: "1234567890", email: "alice@example.com", program: "LifeCamp",invitationCode:"ABC123", tanggalSP: "10 Ds 2024", status: "Expired", FU: "W", source: "MR" },
-  { id: 2, name: "Bob", hp: "2345678901", email: "bob@example.com", program: "LifeCamp", invitationCode:"DEF456",tanggalSP: "", status: "Pending", FU: "1", source: "IG" },
-  { id: 3, name: "Charlie", hp: "3456789012", email: "charlie@example.com", program: "LifeCamp",invitationCode:"GHI789", tanggalSP: "07 Des 2024", status: "Pending", FU: "V", source: "Iklan" },
-  { id: 4, name: "David", hp: "4567890123", email: "david@example.com", program: "LifeCamp",invitationCode:"JKL012", tanggalSP: "", status: "Pending", FU: "1", source: "WA" },
-  { id: 5, name: "Eve", hp: "5678901234", email: "eve@example.com", program: "LifeCamp", invitationCode:"MNO345",tanggalSP: "1 Des 2024", status: "Expired", FU: "3", source: "Email" },
-  { id: 6, name: "Frank", hp: "6789012345", email: "frank@example.com", program: "LifeCamp",invitationCode:"PQR345", tanggalSP: "", status: "Expired", FU: "W", source: "Other" },
-  { id: 7, name: "Grace", hp: "7890123456", email: "grace@example.com", program: "LifeCamp", invitationCode:"RST865",tanggalSP: "", status: "Paid", FU: "X", source: "MR" },
-  { id: 8, name: "Hank", hp: "8901234567", email: "hank@example.com", program: "LifeCamp", invitationCode:"JIH134",tanggalSP: "25 Nov 2024", status: "Paid", FU: "V", source: "IG" },
+const STATUS_OPTIONS = [
+  { value: "0", label: "Pending" },
+  { value: "1", label: "Paid" },
+  { value: "2", label: "Expired" },
 ];
 
-const AdminInterestProgram = () => {
-  const [filters, setFilters] = useState(initialFilters);
-  const [activeFilters, setActiveFilters] = useState({});
-  const [data, setData] = useState(tableData);
-  const [isEditModalOpen, setEditModalOpen] = useState(false);
-  const [selectedParticipant, setSelectedParticipant] = useState(null);
+const FOLLOW_UP_OPTIONS = [
+  { value: 0, label: "Select" },
+  { value: 1, label: <FaWhatsapp style={{ color: "green" }} /> },
+  { value: 2, label: <FcCallback /> },
+  { value: 3, label: <MdClose style={{ color: "red" }} /> },
+  { value: 4, label: <MdCheck style={{ color: "green" }} /> },
+  { value: 5, label: <MdWifiCalling1 style={{ color: "red" }} /> },
+  { value: 6, label: <MdWifiCalling2 style={{ color: "red" }} /> },
+  { value: 7, label: <MdWifiCalling3 style={{ color: "red" }} /> },
+];
 
-  
+const formatLabel = (name) => {
+  switch (name) {
+    case "startDate":
+      return "Start Date";
+    case "endDate":
+      return "End Date";
+    case "city_name":
+      return "City";
+    case "program_name":
+      return "Program";
+    default:
+      return name
+        .replace(/([a-z])([A-Z])/g, "$1 $2")
+        .replace(/_/g, " ")
+        .replace(/^\w/, (c) => c.toUpperCase());
+  }
+};
 
-  const handleEditClick = (participant) => {
-    setSelectedParticipant(participant);
-    setEditModalOpen(true);
-  };
+const FilterInput = ({ name, value, onChange, options }) => {
+  const label = formatLabel(name);
 
-  const handleSave = (updatedParticipant) => {
-    setData(prevData => prevData.map(participant => 
-      participant.id === updatedParticipant.id ? updatedParticipant : participant
-    ));
-    setEditModalOpen(false);
-  };
+  if (name === "status") {
+    return (
+      <div className="col-md-2">
+        <label className="form-label">{label}</label>
+        <select
+          className="form-select"
+          name={name}
+          value={value}
+          onChange={onChange}
+        >
+          <option value="">All</option>
+          {STATUS_OPTIONS.map((option) => (
+            <option key={option.value} value={option.value}>
+              {option.label}
+            </option>
+          ))}
+        </select>
+      </div>
+    );
+  }
 
-  const handleCancel = () => setEditModalOpen(false);
+  if (name.toLowerCase().includes("date")) {
+    return (
+      <div className="col-md-2">
+        <label className="form-label">{label}</label>
+        <input
+          type="date"
+          className="form-control"
+          name={name}
+          value={value}
+          onChange={onChange}
+        />
+      </div>
+    );
+  }
 
-  const handleFilterChange = ({ target: { name, value } }) => {
-    setFilters(prev => ({ ...prev, [name]: value }));
-  };
-
-  const handleFilterSubmit = () => {
-    setActiveFilters(filters);
-    setFilters(initialFilters);
-  };
-
-  const filterData = (data) => {
-    return data.filter(item => {
-      const isWithinDateRange = (!activeFilters.startDate || new Date(item.date) >= new Date(activeFilters.startDate)) &&
-                                (!activeFilters.endDate || new Date(item.date) <= new Date(activeFilters.endDate));
-      return isWithinDateRange && Object.keys(activeFilters).every(key => 
-        !activeFilters[key] || item[key] === activeFilters[key]
-      );
-    });
-  };
-
-  const renderTableHeader = () => (
-    <thead>
-      <tr>
-        {["No", "Name", "HP", "Email", "Program", "Tanggal SP", "Status Pembayaran", "Source","FU", "Action"].map(header => (
-          <th key={header}>{header}</th>
-        ))}
-      </tr>
-    </thead>
-  );
-
-  const renderTableBody = (data) => (
-    <tbody>
-      {data.map(({ id, name, hp, email, program, tanggalSP, status,source }) => (
-        <tr key={id}>
-          <td>{id}</td>
-          <td>{name}</td>
-          <td>{hp}</td>
-          <td>{email}</td>
-          <td>{program}</td>
-          <td>{tanggalSP != "" ? tanggalSP : "-"}</td>
-          <td>{status}</td>
-          <td>{source}</td>
-          <td> <select className="form-select" defaultValue="">
-        {["W", "V", "X","1", "2", "3"].map(option => (
+  return (
+    <div className="col-md-2">
+      <label className="form-label">{label}</label>
+      <select
+        className="form-select"
+        name={name}
+        value={value}
+        onChange={onChange}
+      >
+        <option value="">All</option>
+        {options.map((option) => (
           <option key={option} value={option}>
             {option}
           </option>
         ))}
-      </select></td>
-          <td> <button
-          className="btn btn-primary"
-          disabled={tanggalSP != ""} // Tombol akan dinonaktifkan jika `tanggalCheckin` kosong
-        >Check In</button></td>
-          {/* <td>
-            <div className="dropdown">
-              <button className="btn btn-primary dropdown-toggle" type="button" data-bs-toggle="dropdown" aria-expanded="false">
-                <i className="fas fa-cog"></i>
-              </button>
-              <ul className="dropdown-menu">
-                {["Detail", "Edit", "Delete"].map(action => (
-                  <li key={action} className="dropdown-item">
-                    <a
-                      href="#"
-                      onClick={() => action === "Edit" && handleEditClick({ id, name, hp, email, program, tanggalSP, status, FU })}
-                      className={`text-primary d-flex align-items-center ${action === "Edit" ? "fw-bold" : ""}`}
-                    >
-                      <i className={`fas fa-${action === "Edit" ? "pencil-alt" : action === "Delete" ? "trash-alt" : "eye"}`} style={{ marginRight: "8px" }}></i> 
-                      <span>{action}</span>
-                    </a>
-                  </li>
-                ))}
-              </ul>
-            </div>
-          </td> */}
-        </tr>
-      ))}
-    </tbody>
-  );
-
-  const cardData = [
-    { id: "totalProspect", icon: <FaUserGraduate style={{ fontSize: "28px", color: "#697a8d" }} />, title: "Total Peserta", count: "1,356" },
-    { id: "pending", icon:  <MdPending style={{ fontSize: "28px", color: "#ffff00" }} />, title: "Pending", count: "231" },
-    { id: "expired", icon: <IoMdCloseCircle style={{ fontSize: "28px", color: "#FF0000" }} />, title: "Expired", count: "145" },
-    { id: "paid", icon: <MdPaid style={{ fontSize: "28px", color: "#388e3c" }} />, title: "Paid", count: "980" }
-  ];
-
-  const Card = ({ card }) => (
-    <div className="col-6 col-sm-4 col-md-3 mb-3">
-      <div className="card h-100 shadow-sm text-center" style={{ cursor: "pointer", borderRadius: "10px" }}>
-        <div className="card-body d-flex flex-column align-items-center p-3">
-          <div className="icon mb-2">{card.icon}</div>
-          <h6 className="card-title mb-1" style={{ fontSize: "14px", fontWeight: "500" }}>{card.title}</h6>
-          <p className="fw-bold mb-0" style={{ fontSize: "18px" }}>{card.count}</p>
-        </div>
-      </div>
+      </select>
     </div>
   );
+};
 
-  const ProgramDashboard = () => (
-    <div className="container-xxl flex-grow-1 container-p-y">
-      <div className="row g-3">
-        {cardData.map(card => <Card key={card.id} card={card} />)}
-      </div>
-    </div>
-  );
+const TableRow = ({ index, item, onSignUp, updateFU }) => {
+  const [showModal, setShowModal] = useState(false);
+  const [selectedItem, setSelectedItem] = useState([]);
+  const idProgram = 1;
+  const { programs, fetchPrograms } = useProgram();
+  useEffect(() => {
+    fetchPrograms(1);
+  }, [idProgram]);
 
-  const formatLabel = (key) => {
-    return key
-      .replace(/([a-z])([A-Z])/g, '$1 $2') // Menambahkan spasi antara huruf kecil dan kapital
-      .replace(/^./, str => str.toUpperCase()); // Membuat huruf pertama kapital
+  const handleFUChange = async (selectedOption) => {
+    try {
+      const updatedData = await updateFU(item.id, {
+        call4: selectedOption.value,
+      });
+      if (updatedData) {
+        item.call4 = selectedOption.value;
+      }
+    } catch (error) {
+      console.error("Error updating FU:", error);
+      alert("Failed to update follow-up status.");
+    }
   };
 
+  const handleSignUpClick = (prospect) => {
+    console.log("Dari Handle SU Click :", prospect?.id_payment);
+    setSelectedItem(prospect);
+    setShowModal(true);
+  };
+
+  return (
+    <>
+    {showModal && (
+        <SignUpModal
+          show={showModal}
+          onHide={() => setShowModal(false)}
+          prospect={selectedItem}
+          onConfirm={(data) => {
+            onSignUp(data);
+            setShowModal(false);
+          }}
+          programs={programs}
+        />
+      )}
+      <tr className="text-center">
+        <td>{index + 1}</td>
+        <td>{item.name}</td>
+        <td>{item.phone}</td>
+        <td>{item.email}</td>
+        <td>{item.program_name}</td>
+        <td>{item.city_name}</td>
+        <td>
+          {STATUS_OPTIONS.find((opt) => opt.value === String(item.status))
+            ?.label || "N/A"}
+        </td>
+        <td>
+          {item.tgl_checkin
+            ? moment(item.tgl_checkin).format("DD-MM-YYYY")
+            : "Not Available"}
+        </td>
+        <td>{item.source}</td>
+        <td>
+          <Select
+            className="react-select-container"
+            classNamePrefix="react-select"
+            options={FOLLOW_UP_OPTIONS}
+            defaultValue={FOLLOW_UP_OPTIONS.find(
+              (opt) => opt.value === item.call4
+            )}
+            onChange={handleFUChange}
+            isSearchable={false}
+          />
+        </td>
+        <td>
+          <button
+            className="btn btn-primary btn-sm"
+            onClick={() => handleSignUpClick(item)}
+            disabled={item.status === 1}
+          >
+            Sign Up
+          </button>
+        </td>
+      </tr>
+      
+    </>
+  );
+};
+const AdminInterestProgram = ({ setActiveDetail }) => {
+  // const [showModal, setShowModal] = useState(false); // State untuk modal
+  const {intrprgprospects, updatePaymentManual , setIntrPrgProspects, loading, filterProspects, registerUser, updateProspect } =
+    useProspects();
+  const [filters, setFilters] = useState(INITIAL_FILTERS);
+
+  const filteredProspects = intrprgprospects.filter((item) => {
+    return Object.entries(filters).every(([key, value]) => {
+      if (!value) return true;
+      if (key === "status") return item.status === Number(value);
+      if (key === "startDate" || key === "endDate") {
+        const itemDate = new Date(item.created_at);
+        const startDate = filters.startDate
+          ? new Date(filters.startDate)
+          : null;
+        const endDate = filters.endDate ? new Date(filters.endDate) : null;
+        return (
+          (!startDate || itemDate >= startDate) &&
+          (!endDate || itemDate <= endDate)
+        );
+      }
+      return item[key]?.toString() === value;
+    });
+  });
+
+  const [currentPage, setCurrentPage] = useState(1);
+  const itemsPerPage = 10;
+  
+  const startIndex = (currentPage - 1) * itemsPerPage;
+const paginatedProspects = filteredProspects.slice(startIndex, startIndex + itemsPerPage);
+
+const totalPages = Math.ceil(filteredProspects.length / itemsPerPage);
+
+const handlePageChange = (newPage) => {
+  if (newPage >= 1 && newPage <= totalPages) {
+    setCurrentPage(newPage);
+  }
+};
+
+  const handleFilterChange = (e) => {
+    const { name, value } = e.target;
+    setFilters((prev) => ({ ...prev, [name]: value }));
+  };
+
+  const applyFilters = async () => {
+    await filterProspects(filters);
+  };
+
+  const handleSignUp = async (prospect) => {
+    const data = {
+      parent_id: prospect?.parent_id,
+      program_id: prospect?.program_id,
+      num_children: prospect?.num_children,
+      payment_id: prospect?.payment_id,
+      total: prospect?.total,
+      payment_status: prospect?.payment_status,
+      payment_method: prospect?.payment_method,
+    }
+    // console.log("Data Update", prospect);
+
+    updatePaymentManual(data);
+
+    try {
+      const response = await axiosInstance.get("intrprgcall"); // Mendapatkan data terbaru dari API
+      setIntrPrgProspects(response.data); // Update state dengan data terbaru
+    } catch (error) {
+      console.error("Error fetching updated data:", error);
+    }
+  };
+  
+
+  
 
   return (
     <div className="container-xxl flex-grow-1 container-p-y">
-      <ProgramDashboard />
-      <div className="card mt-4" style={{ marginLeft: "15px", marginRight: "15px" }}>
+      <div className="card mt-1">
         <div className="card-header">
           <h5>Filter</h5>
         </div>
         <div className="card-body">
           <div className="row g-3">
-            {Object.keys(initialFilters).map(filterKey => (
-              <div className="col-md-2" key={filterKey}>
-                <label className="form-label">{formatLabel(filterKey)}</label>
-                {filterKey.includes("Date") ? (
-                  <input type="date" className="form-control" name={filterKey} value={filters[filterKey]} onChange={handleFilterChange} />
-                ) : (
-                  <select className="form-select" name={filterKey} value={filters[filterKey]} onChange={handleFilterChange}>
-                    <option value="">All</option>
-                    {filterKey === "program" && ["PS", "SL", "LS", "PSA", "PCPS", "HP", "IAY"].map(option => <option key={option} value={option}>{option}</option>)}
-                    {filterKey === "branch" && ["KG", "BSD", "PI"].map(option => <option key={option} value={option}>{option}</option>)}
-                    {filterKey === "source" && ["MR", "IG", "Iklan", "WA", "Email", "Other"].map(option => <option key={option} value={option}>{option}</option>)}
-                    {filterKey === "class" && ["A", "B"].map(option => <option key={option} value={option}>{option}</option>)}
-                    {filterKey === "status" && ["Active", "Pending", "Expired", "Paid"].map(option => <option key={option} value={option}>{option}</option>)}
-                  </select>
-                )}
-              </div>
+            {Object.keys(INITIAL_FILTERS).map((key) => (
+              <FilterInput
+                key={key}
+                name={key}
+                value={filters[key]}
+                onChange={handleFilterChange}
+                options={[
+                  ...new Set(intrprgprospects.map((p) => p[key]).filter(Boolean)),
+                ]}
+              />
             ))}
           </div>
-          <button className="btn btn-primary mt-3" onClick={handleFilterSubmit}>
+          <button className="btn btn-primary mt-3" onClick={applyFilters}>
             Filter
           </button>
         </div>
       </div>
-      <div className="card mt-4 shadow-sm" style={{ marginLeft: "15px", marginRight: "15px" }}>
+
+      <div className="card mt-4">
         <div className="card-header text-white">
-          <h5 className="mb-0">Total Peserta</h5>
+          <h5 className="mb-0">List Peserta SP</h5>
         </div>
-        <div className="card-body">
+        <div className="card-body px-0">
           <div className="table-responsive">
-            <table className="table table-striped table-hover">
-            {renderTableHeader()}
-            {renderTableBody(filterData(data))}
-          </table>
-          </div>
-          <nav aria-label="Page navigation">
-  <ul class="my-2 inset-x-0 top-0 pagination pagination-rounded pagination-outline-primary">
-    <li class="page-item first">
-      <a class="page-link" href="#"><i class="bx bx-chevrons-left bx-sm"></i></a>
-    </li>
-    <li class="page-item prev">
-      <a class="page-link" href="#"><i class="bx bx-chevron-left bx-sm"></i></a>
-    </li>
-    <li class="page-item">
-      <a class="page-link" href="#">1</a>
-    </li>
-    <li class="page-item active">
-      <a class="page-link" href="#">2</a>
-    </li>
-    <li class="page-item">
-      <a class="page-link" href="#">3</a>
-    </li>
-    <li class="page-item next">
-      <a class="page-link" href="#"><i class="bx bx-chevron-right bx-sm"></i></a>
-    </li>
-    <li class="page-item last">
-      <a class="page-link" href="#"><i class="bx bx-chevrons-right bx-sm"></i></a>
-    </li>
-  </ul>
-</nav>
-        </div>
-        
+            <table className="table table-hover">
+              <thead>
+                <tr>
+                  {[
+                    "No",
+                    "Name",
+                    "HP",
+                    "Email",
+                    "Program",
+                    "Branch",
+                    "Status",
+                    "Tanggal SP",
+                    "Source",
+                    "FU",
+                    "Action"
+                  ].map((header) => (
+                    <th key={header} className="text-center">
+                      {header}
+                    </th>
+                  ))}
+                </tr>
+              </thead>
+              <tbody>                           
+              {loading ? (
+  <tr>
+    <td colSpan="11" className="text-center">
+      <div className="d-flex justify-content-center align-items-center">
+        <span>Loading data...</span>
       </div>
-      {/* {isEditModalOpen && (
-        <EditDashboard
-          participant={selectedParticipant}
-          onSave={handleSave}
-          onCancel={handleCancel}
-        />
-      )} */}
+    </td>
+  </tr>
+) : paginatedProspects.length === 0 ? (
+                <tr>
+                  <td colSpan="11" className="text-center">
+                    No data available
+                  </td>
+                </tr>
+              ) : (
+                paginatedProspects.map((item, index) => (
+                  <TableRow
+                    key={item.id}
+                    item={item}
+                    index={startIndex + index} // Indeks berdasarkan halaman
+                    onSignUp={handleSignUp}
+                    updateFU={updateProspect}
+                  />
+                ))
+              )}
+              </tbody>
+            
+            </table>
+          </div>
+          <nav className="d-flex justify-content-end mt-3 mx-3" aria-label="Page navigation">
+        <ul className="pagination pagination-rounded pagination-outline-primary">
+          <li className={`page-item ${currentPage === 1 ? "disabled" : ""}`}>
+            <button className="page-link" onClick={() => handlePageChange(1)}>
+              <i className="bx bx-chevrons-left"></i>
+            </button>
+          </li>
+          <li className={`page-item ${currentPage === 1 ? "disabled" : ""}`}>
+            <button className="page-link" onClick={() => handlePageChange(currentPage - 1)}>
+              <i className="bx bx-chevron-left"></i>
+            </button>
+          </li>
+          {[...Array(totalPages)].map((_, index) => (
+            <li key={index} className={`page-item ${currentPage === index + 1 ? "active" : ""}`}>
+              <button className="page-link" onClick={() => handlePageChange(index + 1)}>
+                {index + 1}
+              </button>
+            </li>
+          ))}
+          <li className={`page-item ${currentPage === totalPages || filteredProspects.length == 0 ? "disabled" : ""}`}>
+            <button className="page-link" onClick={() => handlePageChange(currentPage + 1)}>
+              <i className="bx bx-chevron-right"></i>
+            </button>
+          </li>
+          <li className={`page-item ${currentPage === totalPages || filteredProspects.length == 0  ? "disabled" : ""}`}>
+            <button className="page-link" onClick={() => handlePageChange(totalPages)}>
+              <i className="bx bx-chevrons-right"></i>
+            </button>
+          </li>
+        </ul>
+      </nav>
+        </div>
+      </div>
     </div>
   );
 };
 
 export default AdminInterestProgram;
+
+

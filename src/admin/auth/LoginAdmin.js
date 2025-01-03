@@ -1,18 +1,41 @@
 import React, { useState, useContext, useEffect } from "react";
 import { useNavigate } from "react-router-dom";
-import { AuthContext } from "../../context/AuthContext";
+import { AuthContext, useUsers } from "../../context/AuthContext";
 import "bootstrap/dist/css/bootstrap.min.css";
 import "../../assets/login/fonts/icomoon/style.css";
 import "../../assets/login/css/owl.carousel.min.css";
 import "../../assets/login/css/bootstrap.min.css";
 import "../../assets/login/css/style.css";
+import axios from "axios";
+
 
 function LoginAdmin() {
   const [email, setEmail] = useState("");
   const [password, setPassword] = useState("");
   const [error, setError] = useState("");
+  // const [users, setUsers] = useState(JSON.parse(localStorage.getItem("user")));
+  // const [token, setToken] = useState(localStorage.getItem("token")); // Load token from localStorage
   const { login } = useContext(AuthContext);
   const navigate = useNavigate();
+
+  // useEffect(() => {
+  //   const savedUser = localStorage.getItem("user");
+  //   if (savedUser) {
+  //     setUsers((savedUser)); // Parse JSON string to object
+  //   }
+  // }, []);
+
+  // const userData = {
+  //   id: 5,
+  //   name: "dadadadadada",
+  //   phone: "6282298910170",
+  //   email: "cxc@gmai.com",
+  //   id_parent: null,
+  //   email_verified_at: null,
+  //   created_at: "2024-12-18T09:43:08.000000Z",
+  //   updated_at: "2024-12-18T09:43:08.000000Z",
+  //   role_id: 2
+  // };
 
   useEffect(() => {
     // Load external scripts (optional)
@@ -61,13 +84,15 @@ function LoginAdmin() {
   const handleSubmit = async (e) => {
     e.preventDefault();
     setError(""); // Clear previous error message
-
+    console.log("Submitted email:", email); // Log the email
+    console.log("Submitted password:", password); // Log the password (avoid this in production)
     try {
       // Attempt to log the user in using the email and password
       const success = await login(email, password);
+      console.log("Successs:", success);
+      // console.log("Cek Data : ",users["id"]); // Log the password (avoid this in production)
       if (success) {
-        // If login is successful, navigate to the admin dashboard
-        navigate("/admin");
+        // navigate("/admin");
       } else {
         setError("Login failed. Please check your username and password.");
       }
@@ -76,11 +101,26 @@ function LoginAdmin() {
     }
   };
 
+  // const handleSubmit = async (e) => {
+  //   e.preventDefault(); // Mencegah reload halaman
+  //   try {
+  //     await handleLogin(email, password); // Memanggil fungsi login
+  //     console.log("Berhasil login, arahkan ke halaman lain");
+  //     // Arahkan pengguna ke halaman admin jika berhasil
+  //     // navigate("/parent/form");
+  //   } catch (error) {
+  //     console.error("Login gagal:", error.message);
+  //     setError("Login gagal. Silakan periksa kembali email dan password Anda.");
+  //   }
+  // };
+  
+
   return (
     <div className="content">
       <div className="container">
         <div className="row">
           <div className="col-md-6">
+            {/* <h1>{localStorage.getItem("token")}</h1> */}
             <img
               src={
                 process.env.PUBLIC_URL +
@@ -124,12 +164,14 @@ function LoginAdmin() {
                       required
                     />
                   </div>
+                  {/* <h1>{user}</h1> */}
                   <div className="d-flex mb-5 align-items-center">
                     <label className="control control--checkbox mb-0">
                       <span className="caption">Remember me</span>
                       <input type="checkbox" defaultChecked />
                       <div className="control__indicator"></div>
                     </label>
+                    {/* <h1>{user}</h1> */}
                     <span className="ml-auto">
                       <a href="#" className="forgot-pass">
                         Forgot Password
@@ -156,6 +198,28 @@ function LoginAdmin() {
                     </a>
                   </div>
                 </form>
+                {/* Display stored user and token
+                {users && (
+                  <div className="mt-4">
+                    <h4>Stored User:</h4>
+                    <p>
+                      <strong>Name:</strong> {users.name}
+                    </p>
+                    <p>
+                      <strong>Email:</strong> {users.email}
+                    </p>
+                    <p>
+                      <strong>Role ID:</strong> {users.role_id}
+                    </p>
+                  </div>
+                )}
+
+                {token && (
+                  <div className="mt-4">
+                    <h4>Stored Token:</h4>
+                    <p>{token}</p>
+                  </div>
+                )} */}
               </div>
             </div>
           </div>

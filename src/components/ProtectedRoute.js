@@ -1,16 +1,28 @@
-import React from "react";
-import { Navigate } from "react-router-dom";
+import React, { useEffect, useState } from "react";
 import { useAuth } from "../context/AuthContext";
 
 function ProtectedRoute({ children }) {
   const { token } = useAuth();
+  const [isLoading, setIsLoading] = useState(true);
+  
 
-  // Jika tidak ada token (pengguna belum login), redirect ke halaman login
-  if (!token) {
-    return <Navigate to="/login" />;
+  useEffect(() => {
+    // Memastikan pengguna sudah terautentikasi dan data sudah terisi
+    if (token) {
+      setIsLoading(false);
+    }
+  }, [token]);
+
+  // Menunggu data terisi terlebih dahulu
+  if (isLoading) {
+    return (
+      <div className="d-flex justify-content-center align-items-center min-vh-100">
+        <h3>Loading...</h3> {/* Menggunakan h3 untuk ukuran font */}
+      </div>
+    );
   }
-
-  // Jika ada token (pengguna sudah login), tampilkan komponen anak
+  
+  // Jika ada token dan role_id cocok, tampilkan komponen anak
   return children;
 }
 

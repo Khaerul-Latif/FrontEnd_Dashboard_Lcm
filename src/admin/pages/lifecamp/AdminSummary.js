@@ -43,7 +43,7 @@ const tableData = [
     { id: 8, name: "Hank", hp: "8901234567", email: "hank@example.com", program: "LifeCamp", invitationCode: "VWX234", status: "Lunas" },
   ];
 
-const AdminDashboard = () => {
+const AdminSummary = () => {
   const [filters, setFilters] = useState(initialFilters);
   const [activeFilters, setActiveFilters] = useState({});
   const [data, setData] = useState(tableData);
@@ -201,36 +201,36 @@ const AdminDashboard = () => {
         </div>
         <div className="card-body">
           <div className="table-responsive">
-            <table className="table table-striped table-hover">
+            <table className="table table-hover">
             {renderTableHeader()}
             {renderTableBody(filterData(data))}
           </table>
           </div>
-          <nav aria-label="Page navigation">
-  <ul class="my-2 inset-x-0 top-0 pagination pagination-rounded pagination-outline-primary">
-    <li class="page-item first">
-      <a class="page-link" href="#"><i class="bx bx-chevrons-left bx-sm"></i></a>
-    </li>
-    <li class="page-item prev">
-      <a class="page-link" href="#"><i class="bx bx-chevron-left bx-sm"></i></a>
-    </li>
-    <li class="page-item">
-      <a class="page-link" href="#">1</a>
-    </li>
-    <li class="page-item active">
-      <a class="page-link" href="#">2</a>
-    </li>
-    <li class="page-item">
-      <a class="page-link" href="#">3</a>
-    </li>
-    <li class="page-item next">
-      <a class="page-link" href="#"><i class="bx bx-chevron-right bx-sm"></i></a>
-    </li>
-    <li class="page-item last">
-      <a class="page-link" href="#"><i class="bx bx-chevrons-right bx-sm"></i></a>
-    </li>
-  </ul>
-</nav>
+          <nav className="d-flex justify-content-end mt-3 mx-3" aria-label="Page navigation">
+            <ul className="my-2 inset-x-0 top-0 pagination pagination-rounded pagination-outline-primary">
+              <li className="page-item first">
+                <button className="page-link" href="#"><i className="bx bx-chevrons-left"></i></button>
+              </li>
+              <li className="page-item prev">
+                <button className="page-link" href="#"><i className="bx bx-chevron-left"></i></button>
+              </li>
+              <li className="page-item">
+                <button className="page-link" href="#">1</button>
+              </li>
+              <li className="page-item active">
+                <button className="page-link" href="#">2</button>
+              </li>
+              <li className="page-item">
+                <button className="page-link" href="#">3</button>
+              </li>
+              <li className="page-item next">
+                <a className="page-link" href="#"><i className="bx bx-chevron-right"></i></a>
+              </li>
+              <li className="page-item last">
+                <a className="page-link" href="#"><i className="bx bx-chevrons-right"></i></a>
+              </li>
+            </ul>
+          </nav>
         </div>
       </div>
       {/* {isEditModalOpen && (
@@ -244,4 +244,4 @@ const AdminDashboard = () => {
   );
 };
 
-export default AdminDashboard;
+export default AdminSummary;

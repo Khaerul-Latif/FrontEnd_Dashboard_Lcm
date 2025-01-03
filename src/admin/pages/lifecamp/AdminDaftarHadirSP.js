@@ -1,21 +1,20 @@
-import React, { useState } from "react";
+import React, { useState, useEffect } from "react";
 import { useProspects } from "../../../context/ProspectContext";
-import { PiStudentBold } from "react-icons/pi";
+import moment from "moment";
+import Select from "react-select";
 import {
-  MdOutlinePendingActions,
-  MdPaid,
   MdClose,
   MdCheck,
   MdWifiCalling1,
   MdWifiCalling2,
   MdWifiCalling3,
 } from "react-icons/md";
-import { RiPassExpiredLine } from "react-icons/ri";
 import { FaWhatsapp } from "react-icons/fa";
 import { FcCallback } from "react-icons/fc";
-import Select from "react-select";
+import { useProgram } from "../../../context/ProgramContext";
+import SignUpModal from "../../components/SignUpModal";
 
-// Constants
+
 const INITIAL_FILTERS = {
   startDate: "",
   endDate: "",
@@ -59,19 +58,6 @@ const formatLabel = (name) => {
         .replace(/^\w/, (c) => c.toUpperCase());
   }
 };
-
-// Components
-const Card = ({ card }) => (
-  <div className="col-12 col-sm-6 col-md-3">
-    <div className="card h-100 shadow-sm" role="button">
-      <div className="card-body d-flex flex-column align-items-center p-3">
-        <div className="mb-2">{card.icon}</div>
-        <h6 className="card-title mb-1">{card.title}</h6>
-        <p className="fw-bold mb-0">{card.count}</p>
-      </div>
-    </div>
-  </div>
-);
 
 const FilterInput = ({ name, value, onChange, options }) => {
   const label = formatLabel(name);
@@ -132,33 +118,61 @@ const FilterInput = ({ name, value, onChange, options }) => {
   );
 };
 
-const TableRow = ({ item, index, updateFU }) => {
+const TableRow = ({ index, item, onSignUp, updateFU }) => {
+   const [showModal, setShowModal] = useState(false);
+    const [selectedItem, setSelectedItem] = useState([]);
+    const { programs, isLoading: programLoading, fetchPrograms,  } = useProgram();
+    useEffect(() => {
+        fetchPrograms(item.id_program);
+    }, [item.id_program]);
   const handleFUChange = async (selectedOption) => {
+    
     try {
       const updatedData = await updateFU(item.id, {
-        call: selectedOption.value,
+        call3: selectedOption.value,
       });
       if (updatedData) {
-        item.call = selectedOption.value;
+        item.call3 = selectedOption.value;
       }
     } catch (error) {
       console.error("Error updating FU:", error);
       alert("Error CAll");
     }
   };
-
+  const handleSignUpClick = (prospect) => {
+    setSelectedItem(prospect);
+    setShowModal(true);
+  };
+  // console.log("UI Table Row :", item);
   return (
-    <tr className="text-center">
-       <td>{index + 1}</td>
+    <>
+     {showModal && (
+        <SignUpModal
+          show={showModal}
+          onHide={() => setShowModal(false)}
+          prospect={selectedItem}
+          onConfirm={(data) => {
+            onSignUp(data);
+            setShowModal(false);
+          }}
+          programs={programs}
+        />
+      )}
+    <tr className="text-center text-dark">
+      <td>{index + 1}</td>
       <td>{item.name}</td>
       <td>{item.phone}</td>
       <td>{item.email}</td>
       <td>{item.program_name}</td>
       <td>{item.city_name}</td>
-      <td>{item.invitationCode || "-"}</td>
       <td>
         {STATUS_OPTIONS.find((opt) => opt.value === String(item.status))
           ?.label || "N/A"}
+      </td>
+      <td>
+        {item.tgl_checkin
+          ? moment(item.tgl_checkin).format("DD-MM-YYYY")
+          : "SU NO SP"}
       </td>
       <td>{item.source}</td>
       <td>
@@ -167,30 +181,31 @@ const TableRow = ({ item, index, updateFU }) => {
           classNamePrefix="react-select"
           options={FOLLOW_UP_OPTIONS}
           defaultValue={FOLLOW_UP_OPTIONS.find(
-            (opt) => opt.value === item.call
+            (opt) => opt.value === item.call3
           )}
           onChange={handleFUChange}
           isSearchable={false}
         />
       </td>
+      <td>
+      <button
+            className="btn btn-primary btn-sm"
+            onClick={() => handleSignUpClick(item)}
+            disabled={item.user_email !== null}
+          >
+            Sign Up
+          </button>
+      </td>
     </tr>
+    </>
   );
 };
 
-// Main Component
-const AdminSesiPerkenalan = ({ setActiveDetail }) => {
-  const {
-    prospects,
-    loading,
-    filterProspects,
-    updateProspect,
-    prospectCount,
-    pendingCount,
-    expiredCount,
-    paidCount,
-  } = useProspects();
+const AdminDaftarHadirSP = ({ setActiveDetail }) => {
+  const { prgprospects, loading, filterProspects, paymentManual, updateProspect } =
+    useProspects();
   const [filters, setFilters] = useState(INITIAL_FILTERS);
-  const filteredProspects = prospects.filter((item) => {
+  const filteredProspects = prgprospects.filter((item) => {
     return Object.entries(filters).every(([key, value]) => {
       if (!value) return true;
       if (key === "status") return item.status === Number(value);
@@ -208,7 +223,6 @@ const AdminSesiPerkenalan = ({ setActiveDetail }) => {
       return item[key]?.toString() === value;
     });
   });
-
 
   const [currentPage, setCurrentPage] = useState(1);
   const itemsPerPage = 10;
@@ -229,59 +243,35 @@ const handlePageChange = (newPage) => {
     setFilters((prev) => ({ ...prev, [name]: value }));
   };
 
-  const CARD_DATA = [
-    {
-      id: "totalStudent",
-      icon: <PiStudentBold style={{ fontSize: "28px", color: "#4CAF50" }} />,
-      title: "Total Prospect",
-      count: prospectCount ?? "Loading...",
-    },
-    {
-      id: "pending",
-      icon: (
-        <MdOutlinePendingActions
-          style={{ fontSize: "28px", color: "#FFC107" }}
-        />
-      ),
-      title: "Pending",
-      count: pendingCount ?? "Loading...",
-    },
-    {
-      id: "expired",
-      icon: (
-        <RiPassExpiredLine style={{ fontSize: "28px", color: "#F44336" }} />
-      ),
-      title: "Expired",
-      count: expiredCount ?? "Loading...",
-    },
-    {
-      id: "paid",
-      icon: <MdPaid style={{ fontSize: "28px", color: "#2196F3" }} />,
-      title: "Paid",
-      count: paidCount ?? "Loading...",
-    },
-  ];
-
-  const applyFilters = () => {
-    filterProspects(filters);
-    setCurrentPage(1);
+  const applyFilters = async () => {
+    await filterProspects(filters);
   };
 
+  const handleSignUp = (prospect) => {
+    const data = {
+      parent_id: prospect?.parent_id,
+      program_id: prospect?.program_id,
+      num_children: prospect?.num_children,
+      total: prospect?.total,
+      payment_status: prospect?.payment_status,
+      payment_method: prospect?.payment_method,
+    }
+    console.log("DAta handle Signup", data);
+    
 
-
-//   if (loading) return   <div className="d-flex justify-content-center align-items-center min-vh-100">
+    paymentManual(data);
+    
+  };
+  
+console.log("Admin Daftar hadir SP", prgprospects);
+  
+//   if (loading) return  <div className="d-flex justify-content-center align-items-center min-vh-100">
 //   <h3>Loading...</h3> {/* Menggunakan h3 untuk ukuran font */}
 // </div>;
-
+  console.log("SP")
   return (
     <div className="container-xxl flex-grow-1 container-p-y">
-      <div className="row g-3">
-        {CARD_DATA.map((card) => (
-          <Card key={card.id} card={card} onClick={setActiveDetail} />
-        ))}
-      </div>
-
-      <div className="card mt-4">
+      <div className="card mt-1">
         <div className="card-header">
           <h5>Filter</h5>
         </div>
@@ -294,7 +284,7 @@ const handlePageChange = (newPage) => {
                 value={filters[key]}
                 onChange={handleFilterChange}
                 options={[
-                  ...new Set(prospects.map((p) => p[key]).filter(Boolean)),
+                  ...new Set(prgprospects.map((p) => p[key]).filter(Boolean)),
                 ]}
               />
             ))}
@@ -307,7 +297,7 @@ const handlePageChange = (newPage) => {
 
       <div className="card mt-4">
         <div className="card-header text-white">
-          <h5 className="mb-0">List Prospect</h5>
+          <h5 className="mb-0">List Peserta SP</h5>
         </div>
         <div className="card-body px-0">
           <div className="table-responsive">
@@ -320,11 +310,12 @@ const handlePageChange = (newPage) => {
                     "HP",
                     "Email",
                     "Program",
-                    "Kota",
-                    "Invitation Code",
+                    "Branch",
                     "Status",
+                    "Tanggal SP",
                     "Source",
                     "FU",
+                    "Action"
                   ].map((header) => (
                     <th key={header} className="text-center">
                       {header}
@@ -332,10 +323,10 @@ const handlePageChange = (newPage) => {
                   ))}
                 </tr>
               </thead>
-              <tbody>
+              <tbody className="text-primary">
   {loading ? (
   <tr>
-    <td colSpan="10" className="text-center">
+    <td colSpan="11" className="text-center">
       <div className="d-flex justify-content-center align-items-center">
         <span>Loading data...</span>
       </div>
@@ -343,7 +334,7 @@ const handlePageChange = (newPage) => {
   </tr>
 ) : paginatedProspects.length === 0 ? (
     <tr>
-      <td colSpan="10" className="text-center">
+      <td colSpan="11" className="text-center">
         No data available
       </td>
     </tr>
@@ -353,15 +344,15 @@ const handlePageChange = (newPage) => {
         key={item.id}
         item={item}
         index={startIndex + index} // Indeks berdasarkan halaman
+        onSignUp={handleSignUp}
         updateFU={updateProspect}
       />
     ))
   )}
-</tbody>
-
+              </tbody>
+            
             </table>
-         
-          </div>  
+          </div>
           <nav className="d-flex justify-content-end mt-3 mx-3" aria-label="Page navigation">
   <ul className="pagination pagination-rounded pagination-outline-primary">
     <li className={`page-item ${currentPage === 1 ? "disabled" : ""}`}>
@@ -381,7 +372,7 @@ const handlePageChange = (newPage) => {
         </button>
       </li>
     ))}
-    <li className={`page-item ${currentPage === totalPages || filteredProspects.length == 0  ? "disabled" : ""}`}>
+    <li className={`page-item ${currentPage === totalPages || filteredProspects.length == 0 ? "disabled" : ""}`}>
       <button className="page-link" onClick={() => handlePageChange(currentPage + 1)}>
         <i className="bx bx-chevron-right"></i>
       </button>
@@ -393,11 +384,10 @@ const handlePageChange = (newPage) => {
     </li>
   </ul>
 </nav>
-
         </div>
       </div>
     </div>
   );
 };
 
-export default AdminSesiPerkenalan;
+export default AdminDaftarHadirSP;

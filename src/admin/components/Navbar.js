@@ -6,7 +6,8 @@ const Navbar = () => {
   const { logout } = useAuth();
   const navigate = useNavigate();
 
-  const handleLogout = () => {
+  const handleLogout = (event) => {
+    event.preventDefault();
     logout();
     navigate("/login");
   };
@@ -17,7 +18,7 @@ const Navbar = () => {
       id="layout-navbar"
     >
       <div className="layout-menu-toggle navbar-nav align-items-xl-center me-3 me-xl-0 d-xl-none">
-        <a className="nav-item nav-link px-0 me-xl-4" href="javascript:void(0)">
+        <a className="nav-item nav-link px-0 me-xl-4">
           <i className="bx bx-menu bx-sm" />
         </a>
       </div>
@@ -28,20 +29,20 @@ const Navbar = () => {
         {/* Search */}
         <div className="navbar-nav align-items-center">
           <div className="nav-item d-flex align-items-center">
-            <i className="bx bx-search fs-4 lh-0" />
+            {/* <i className="bx bx-search fs-4 lh-0" />
             <input
               type="text"
               className="form-control border-0 shadow-none"
               placeholder="Search..."
               aria-label="Search..."
-            />
+            /> */}
           </div>
         </div>
         {/* /Search */}
         <ul className="navbar-nav flex-row align-items-center ms-auto">
           {/* GitHub Button */}
           <li className="nav-item lh-1 me-3">
-            <a
+            {/* <a
               className="github-button"
               href="https://github.com/themeselection/sneat-html-admin-template-free"
               data-icon="octicon-star"
@@ -50,13 +51,12 @@ const Navbar = () => {
               aria-label="Star themeselection/sneat-html-admin-template-free on GitHub"
             >
               Star
-            </a>
+            </a> */}
           </li>
           {/* User Menu */}
           <li className="nav-item navbar-dropdown dropdown-user dropdown">
             <a
               className="nav-link dropdown-toggle hide-arrow"
-              href="javascript:void(0);"
               data-bs-toggle="dropdown"
             >
               <div className="avatar avatar-online">
@@ -87,7 +87,7 @@ const Navbar = () => {
                   </div>
                 </a>
               </li>
-              <li>
+              {/* <li>
                 <div className="dropdown-divider" />
               </li>
               <li>
@@ -115,12 +115,11 @@ const Navbar = () => {
               </li>
               <li>
                 <div className="dropdown-divider" />
-              </li>
+              </li> */}
               {/* Logout */}
               <li>
                 <a
                   className="dropdown-item"
-                  href="javascript:void(0);"
                   onClick={handleLogout} // Trigger logout when clicked
                 >
                   <i className="bx bx-power-off me-2" />

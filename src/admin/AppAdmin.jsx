@@ -7,19 +7,13 @@ import "../assets/vendor/css/theme-default.css";
 import "../assets/css/demo.css";
 import "../assets/vendor/libs/perfect-scrollbar/perfect-scrollbar.css";
 import "../assets/vendor/libs/apex-charts/apex-charts.css";
-import AdminDashboard from "./pages/dashboard/AdminDashboard.js";
-import AdminStudent from "./pages/student/AdminStudent.js";
-import AdminParent from "./pages/parent/AdminParent.js";
-import AdminInvoice from "./pages/invoice/AdminInvoice.js";
-// import "../assets/vendor/libs/perfect-scrollbar/perfect-scrollbar";
-// import "../assets/vendor/js/bootstrap.js";
-
 import Navbar from "./components/Navbar";
 import Sidebar from "./components/Sidebar";
 import AdminDaftarPesertaSP from "./pages/lifecamp/AdminDaftarPesertaSP.js";
 import AdminSesiPerkenalan from "./pages/lifecamp/AdminSesiPerkenalan.js";
 import AdminSummary from "./pages/lifecamp/AdminSummary.js";
 import AdminInterestProgram from "./pages/lifecamp/AdminInterestProgram.js";
+import AdminDaftarHadirSP from "./pages/lifecamp/AdminDaftarHadirSP.js";
 
 
 function AdminApp() {
@@ -104,15 +98,11 @@ function AdminApp() {
           <Navbar />
           <div className="content-wrapper">
             <Routes>
-              {/* <Route path="/dashboard" element={<AdminDashboard />} /> */}
               <Route path="/dashboard" element={<AdminSummary />} />
-              <Route path="/sesi-perkenalan" element={<AdminSesiPerkenalan />}/>
+              <Route path="/sp" element={<AdminSesiPerkenalan />}/>
               <Route path="/daftar-peserta-sp" element={<AdminDaftarPesertaSP />} />
-              <Route path="/interest-program" element={<AdminInterestProgram />} />
-              <Route path="/parents" element={<AdminParent />}/>
-              <Route path="/students" element={<AdminStudent />} />
-              <Route path="/invoices" element={<AdminInvoice />} />
-              {/* <Route path="another-page" element={<AnotherPage />} /> */}
+              <Route path="/daftar-hadir-sp" element={<AdminDaftarHadirSP />} />
+              <Route path="/interest" element={<AdminInterestProgram />} />
             </Routes>
             <div className="content-backdrop fade"></div>
           </div>
