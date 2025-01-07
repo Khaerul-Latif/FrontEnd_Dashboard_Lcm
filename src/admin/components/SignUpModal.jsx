@@ -26,8 +26,9 @@ const SignUpModal = ({ show, onHide, prospect, onConfirm, programs }) => {
         ...(prospect.id_payment ? { payment_id: prospect.id_payment } : {}), // Menambahkan id_payment jika ada
       });
     }
-    console.log("Num Children :", prospect?.jumlah_anak);
-    console.log("TOtal :", prospect?.total);
+    // console.log("Num Children :", prospect?.jumlah_anak);
+    // console.log("Form Data :", formData);
+    // console.log("Prospect :", prospect);
   }, [prospect, formData]); // Pastikan effect ini dipicu jika prospect atau formData berubah
   
 
@@ -134,21 +135,29 @@ const SignUpModal = ({ show, onHide, prospect, onConfirm, programs }) => {
             
           </Form.Group>
 
+          {(formData.num_children >= 2 && !isReadOnly)&& (
+          <Form.Group controlId="formDiscount">
+            <Form.Label>Family Discount</Form.Label>
+            <Form.Control
+              type="text"
+              name="discount"
+              value={`- ${formatCurrency(
+                (programs?.price / programs?.discount) * Math.max(0, formData.num_children - 1)
+              )}`}
+              readOnly
+              style={{ color: "red" }}
+            />
+          </Form.Group>
+        )}
+
           <Form.Group controlId="formTotal">
             <Form.Label>Total</Form.Label>
-            {/* <Form.Control
-              type="number"
-              name="total"
-              value={formData.total}
-              min={1}
-              readOnly
-            /> */}
              <Form.Control
-            type="text" // Mengubah menjadi text agar dapat menampilkan format mata uang
-            name="total"
-            value={formatCurrency(formData.total)} // Menampilkan total dengan format mata uang
-            readOnly // Menambahkan kondisi readonly jika payment_id ada
-          />
+              type="text" // Mengubah menjadi text agar dapat menampilkan format mata uang
+              name="total"
+              value={formatCurrency(formData.total)} // Menampilkan total dengan format mata uang
+              readOnly // Menambahkan kondisi readonly jika payment_id ada
+            />
           </Form.Group>
 
           <Form.Group controlId="formPaymentStatus">

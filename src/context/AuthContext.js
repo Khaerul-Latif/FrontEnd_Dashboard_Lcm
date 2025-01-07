@@ -3,7 +3,7 @@ import axios from "axios";
 import Swal from "sweetalert2";
 import withReactContent from 'sweetalert2-react-content';
 
-const API_URL = "http://127.0.0.1:8001/api/";
+const API_URL = process.env.API_URL_DB;
 
 export const AuthContext = createContext();
 

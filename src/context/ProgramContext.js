@@ -2,7 +2,7 @@
 import React, { createContext, useState, useEffect, useContext } from "react";
 import axios from "axios";
 
-const APP_URL = "http://127.0.0.1:8000/api";
+const APP_URL = process.env.API_URL_LP;
 
 const ProgramContext = createContext();
 
@@ -13,7 +13,7 @@ export const ProgramProvider = ({ children }) => {
   const fetchPrograms = async (programId) => {
     setIsLoading(true);
     try {
-      const response = await axios.get(`${APP_URL}/programs/${programId}`);
+      const response = await axios.get(`${APP_URL}programs/${programId}`);
       // const cleanedData = response.data;
       console.log("cleanedData", response.data);
       // const jsonData = JSON.parse(cleanedData);

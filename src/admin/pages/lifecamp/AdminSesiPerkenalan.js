@@ -14,6 +14,7 @@ import { RiPassExpiredLine } from "react-icons/ri";
 import { FaWhatsapp } from "react-icons/fa";
 import { FcCallback } from "react-icons/fc";
 import Select from "react-select";
+import Pagination from "../../components/Pagination";
 
 // Constants
 const INITIAL_FILTERS = {
@@ -21,15 +22,9 @@ const INITIAL_FILTERS = {
   endDate: "",
   city_name: "",
   program_name: "",
-  status: "",
   source: "",
 };
 
-const STATUS_OPTIONS = [
-  { value: "0", label: "Pending" },
-  { value: "1", label: "Paid" },
-  { value: "2", label: "Expired" },
-];
 
 const FOLLOW_UP_OPTIONS = [
   { value: 0, label: "Select" },
@@ -75,27 +70,6 @@ const Card = ({ card }) => (
 
 const FilterInput = ({ name, value, onChange, options }) => {
   const label = formatLabel(name);
-
-  if (name === "status") {
-    return (
-      <div className="col-md-2">
-        <label className="form-label">{label}</label>
-        <select
-          className="form-select"
-          name={name}
-          value={value}
-          onChange={onChange}
-        >
-          <option value="">All</option>
-          {STATUS_OPTIONS.map((option) => (
-            <option key={option.value} value={option.value}>
-              {option.label}
-            </option>
-          ))}
-        </select>
-      </div>
-    );
-  }
 
   if (name.toLowerCase().includes("date")) {
     return (
@@ -157,8 +131,7 @@ const TableRow = ({ item, index, updateFU }) => {
       <td>{item.city_name}</td>
       <td>{item.invitationCode || "-"}</td>
       <td>
-        {STATUS_OPTIONS.find((opt) => opt.value === String(item.status))
-          ?.label || "N/A"}
+        {item.status == 0 ? "Pending" : ""}
       </td>
       <td>{item.source}</td>
       <td>
@@ -193,7 +166,6 @@ const AdminSesiPerkenalan = ({ setActiveDetail }) => {
   const filteredProspects = prospects.filter((item) => {
     return Object.entries(filters).every(([key, value]) => {
       if (!value) return true;
-      if (key === "status") return item.status === Number(value);
       if (key === "startDate" || key === "endDate") {
         const itemDate = new Date(item.created_at);
         const startDate = filters.startDate
@@ -267,12 +239,6 @@ const handlePageChange = (newPage) => {
     setCurrentPage(1);
   };
 
-
-
-//   if (loading) return   <div className="d-flex justify-content-center align-items-center min-vh-100">
-//   <h3>Loading...</h3> {/* Menggunakan h3 untuk ukuran font */}
-// </div>;
-
   return (
     <div className="container-xxl flex-grow-1 container-p-y">
       <div className="row g-3">
@@ -333,67 +299,39 @@ const handlePageChange = (newPage) => {
                 </tr>
               </thead>
               <tbody>
-  {loading ? (
-  <tr>
-    <td colSpan="10" className="text-center">
-      <div className="d-flex justify-content-center align-items-center">
-        <span>Loading data...</span>
-      </div>
-    </td>
-  </tr>
-) : paginatedProspects.length === 0 ? (
-    <tr>
-      <td colSpan="10" className="text-center">
-        No data available
-      </td>
-    </tr>
-  ) : (
-    paginatedProspects.map((item, index) => (
-      <TableRow
-        key={item.id}
-        item={item}
-        index={startIndex + index} // Indeks berdasarkan halaman
-        updateFU={updateProspect}
-      />
-    ))
-  )}
-</tbody>
-
+                  {loading ? (
+                  <tr>
+                    <td colSpan="10" className="text-center">
+                      <div className="d-flex justify-content-center align-items-center">
+                        <span>Loading data...</span>
+                      </div>
+                    </td>
+                  </tr>
+                ) : paginatedProspects.length === 0 ? (
+                    <tr>
+                      <td colSpan="10" className="text-center">
+                        No data available
+                      </td>
+                    </tr>
+                  ) : (
+                    paginatedProspects.map((item, index) => (
+                      <TableRow
+                        key={item.id}
+                        item={item}
+                        index={startIndex + index} // Indeks berdasarkan halaman
+                        updateFU={updateProspect}
+                      />
+                    ))
+                  )}
+                </tbody>
             </table>
-         
           </div>  
-          <nav className="d-flex justify-content-end mt-3 mx-3" aria-label="Page navigation">
-  <ul className="pagination pagination-rounded pagination-outline-primary">
-    <li className={`page-item ${currentPage === 1 ? "disabled" : ""}`}>
-      <button className="page-link" onClick={() => handlePageChange(1)}>
-        <i className="bx bx-chevrons-left"></i>
-      </button>
-    </li>
-    <li className={`page-item ${currentPage === 1 ? "disabled" : ""}`}>
-      <button className="page-link" onClick={() => handlePageChange(currentPage - 1)}>
-        <i className="bx bx-chevron-left"></i>
-      </button>
-    </li>
-    {[...Array(totalPages)].map((_, index) => (
-      <li key={index} className={`page-item ${currentPage === index + 1 ? "active" : ""}`}>
-        <button className="page-link" onClick={() => handlePageChange(index + 1)}>
-          {index + 1}
-        </button>
-      </li>
-    ))}
-    <li className={`page-item ${currentPage === totalPages || filteredProspects.length == 0  ? "disabled" : ""}`}>
-      <button className="page-link" onClick={() => handlePageChange(currentPage + 1)}>
-        <i className="bx bx-chevron-right"></i>
-      </button>
-    </li>
-    <li className={`page-item ${currentPage === totalPages || filteredProspects.length == 0  ? "disabled" : ""}`}>
-      <button className="page-link" onClick={() => handlePageChange(totalPages)}>
-        <i className="bx bx-chevrons-right"></i>
-      </button>
-    </li>
-  </ul>
-</nav>
-
+          {paginatedProspects.length === 0 ? null :   <Pagination
+            currentPage={currentPage}
+            totalPages={totalPages}
+            filteredProspects={filteredProspects}
+            onPageChange={handlePageChange}
+          />}
         </div>
       </div>
     </div>

@@ -8,12 +8,15 @@ import {
   MdWifiCalling1,
   MdWifiCalling2,
   MdWifiCalling3,
+  MdOutlinePayment,
+  MdPaid,
 } from "react-icons/md";
 import { FaWhatsapp } from "react-icons/fa";
 import { FcCallback } from "react-icons/fc";
 import { useProgram } from "../../../context/ProgramContext";
 import SignUpModal from "../../components/SignUpModal";
-
+import Pagination from "../../components/Pagination";
+import { LuMapPinCheckInside } from 'react-icons/lu';
 
 const INITIAL_FILTERS = {
   startDate: "",
@@ -58,6 +61,22 @@ const formatLabel = (name) => {
         .replace(/^\w/, (c) => c.toUpperCase());
   }
 };
+
+
+const Card = ({ card }) => (
+  <div className="col-12 col-sm-6 col-md-3">
+    <div className="card h-100 shadow-sm" role="button">
+      <div className="card-body d-flex flex-column align-items-center p-3">
+        <div className="mb-2">{card.icon}</div>
+        <h6 className="card-title mb-1">{card.title}</h6>
+        <p className="fw-bold mb-0">{card.count}</p>
+      </div>
+    </div>
+  </div>
+);
+
+
+
 
 const FilterInput = ({ name, value, onChange, options }) => {
   const label = formatLabel(name);
@@ -143,7 +162,7 @@ const TableRow = ({ index, item, onSignUp, updateFU }) => {
     setSelectedItem(prospect);
     setShowModal(true);
   };
-  // console.log("UI Table Row :", item);
+
   return (
     <>
      {showModal && (
@@ -160,6 +179,7 @@ const TableRow = ({ index, item, onSignUp, updateFU }) => {
       )}
     <tr className="text-center text-dark">
       <td>{index + 1}</td>
+      {/* <td>{item.id}</td> */}
       <td>{item.name}</td>
       <td>{item.phone}</td>
       <td>{item.email}</td>
@@ -202,7 +222,7 @@ const TableRow = ({ index, item, onSignUp, updateFU }) => {
 };
 
 const AdminDaftarHadirSP = ({ setActiveDetail }) => {
-  const { prgprospects, loading, filterProspects, paymentManual, updateProspect } =
+  const { countCheckin, paidSP, countCheckinToday, prgprospects, loading, filterProspects, paymentManual, updateProspect } =
     useProspects();
   const [filters, setFilters] = useState(INITIAL_FILTERS);
   const filteredProspects = prgprospects.filter((item) => {
@@ -243,6 +263,31 @@ const handlePageChange = (newPage) => {
     setFilters((prev) => ({ ...prev, [name]: value }));
   };
 
+  const CARD_DATA = [
+    {
+      id: "totalPaid",
+      icon: <MdOutlinePayment  style={{ fontSize: "28px", color: "#4CAF50" }} />,
+      title: "Total Paid",
+      count: paidSP ?? "Loading...",
+    },
+    {
+      id: "paidToday",
+      icon: <MdPaid style={{ fontSize: "28px", color: "#2196F3" }} />,
+      title: "Paid Today",
+      count: countCheckinToday ?? "Loading...",
+    },
+    {
+      id: "checkin",
+      icon: (
+        <LuMapPinCheckInside
+          style={{ fontSize: "28px", color: "#FFC107" }}
+        />
+      ),
+      title: "Check-in",
+      count: countCheckin ?? "Loading...",
+    },
+  ];
+
   const applyFilters = async () => {
     await filterProspects(filters);
   };
@@ -256,22 +301,20 @@ const handlePageChange = (newPage) => {
       payment_status: prospect?.payment_status,
       payment_method: prospect?.payment_method,
     }
-    console.log("DAta handle Signup", data);
-    
+
+    console.log("Data Dari Handle Signup Daftar Hadir SP :", data);
 
     paymentManual(data);
-    
   };
-  
-console.log("Admin Daftar hadir SP", prgprospects);
-  
-//   if (loading) return  <div className="d-flex justify-content-center align-items-center min-vh-100">
-//   <h3>Loading...</h3> {/* Menggunakan h3 untuk ukuran font */}
-// </div>;
-  console.log("SP")
-  return (
+    return (
     <div className="container-xxl flex-grow-1 container-p-y">
-      <div className="card mt-1">
+        <div className="row g-1">
+        {CARD_DATA.map((card) => (
+          <Card key={card.id} card={card} onClick={setActiveDetail} />
+        ))}
+      </div>
+
+      <div className="card mt-4">
         <div className="card-header">
           <h5>Filter</h5>
         </div>
@@ -297,7 +340,7 @@ console.log("Admin Daftar hadir SP", prgprospects);
 
       <div className="card mt-4">
         <div className="card-header text-white">
-          <h5 className="mb-0">List Peserta SP</h5>
+          <h5 className="mb-0">List Peserta Daftar Hadir SP</h5>
         </div>
         <div className="card-body px-0">
           <div className="table-responsive">
@@ -324,66 +367,40 @@ console.log("Admin Daftar hadir SP", prgprospects);
                 </tr>
               </thead>
               <tbody className="text-primary">
-  {loading ? (
-  <tr>
-    <td colSpan="11" className="text-center">
-      <div className="d-flex justify-content-center align-items-center">
-        <span>Loading data...</span>
-      </div>
-    </td>
-  </tr>
-) : paginatedProspects.length === 0 ? (
-    <tr>
-      <td colSpan="11" className="text-center">
-        No data available
-      </td>
-    </tr>
-  ) : (
-    paginatedProspects.map((item, index) => (
-      <TableRow
-        key={item.id}
-        item={item}
-        index={startIndex + index} // Indeks berdasarkan halaman
-        onSignUp={handleSignUp}
-        updateFU={updateProspect}
-      />
-    ))
-  )}
+                {loading ? (
+                <tr>
+                  <td colSpan="11" className="text-center">
+                    <div className="d-flex justify-content-center align-items-center">
+                      <span>Loading data...</span>
+                    </div>
+                  </td>
+                </tr>
+              ) : (paginatedProspects.length === 0) ? (
+                  <tr>
+                    <td colSpan="11" className="text-center">
+                      No data available
+                    </td>
+                  </tr>
+                ) : (
+                  paginatedProspects.map((item, index) => (
+                    <TableRow
+                      key={item.id}
+                      item={item}
+                      index={startIndex + index} // Indeks berdasarkan halaman
+                      onSignUp={handleSignUp}
+                      updateFU={updateProspect}
+                    />
+                  ))
+                )}
               </tbody>
-            
             </table>
           </div>
-          <nav className="d-flex justify-content-end mt-3 mx-3" aria-label="Page navigation">
-  <ul className="pagination pagination-rounded pagination-outline-primary">
-    <li className={`page-item ${currentPage === 1 ? "disabled" : ""}`}>
-      <button className="page-link" onClick={() => handlePageChange(1)}>
-        <i className="bx bx-chevrons-left"></i>
-      </button>
-    </li>
-    <li className={`page-item ${currentPage === 1 ? "disabled" : ""}`}>
-      <button className="page-link" onClick={() => handlePageChange(currentPage - 1)}>
-        <i className="bx bx-chevron-left"></i>
-      </button>
-    </li>
-    {[...Array(totalPages)].map((_, index) => (
-      <li key={index} className={`page-item ${currentPage === index + 1 ? "active" : ""}`}>
-        <button className="page-link" onClick={() => handlePageChange(index + 1)}>
-          {index + 1}
-        </button>
-      </li>
-    ))}
-    <li className={`page-item ${currentPage === totalPages || filteredProspects.length == 0 ? "disabled" : ""}`}>
-      <button className="page-link" onClick={() => handlePageChange(currentPage + 1)}>
-        <i className="bx bx-chevron-right"></i>
-      </button>
-    </li>
-    <li className={`page-item ${currentPage === totalPages || filteredProspects.length == 0  ? "disabled" : ""}`}>
-      <button className="page-link" onClick={() => handlePageChange(totalPages)}>
-        <i className="bx bx-chevrons-right"></i>
-      </button>
-    </li>
-  </ul>
-</nav>
+          {paginatedProspects.length === 0 ? null : <Pagination
+            currentPage={currentPage}
+            totalPages={totalPages}
+            filteredProspects={filteredProspects}
+            onPageChange={handlePageChange}
+          />}
         </div>
       </div>
     </div>

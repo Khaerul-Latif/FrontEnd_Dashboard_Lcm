@@ -110,6 +110,69 @@ const { data: expiredCount = [] } = useQuery({
     },
   });
 
+ // Fetch Counts Interest Program
+const { data: interestProgramCount = [] } = useQuery({
+  queryKey: ["interestProgramCount"],
+  queryFn: async () => {
+    const response = await axiosInstance.get("count_iprogram");
+    return response.data.count;
+  },
+});
+
+const { data: pendingInterestProgramCount = [] } = useQuery({
+  queryKey: ["pendingInterestProgramCount"],
+  queryFn: async () => {
+    const response = await axiosInstance.get("count_pending_iprogram");
+    return response.data.count;
+  },
+});
+
+const { data: expiredInterestProgramCount = [] } = useQuery({
+  queryKey: ["expiredInterestProgramCount"],
+  queryFn: async () => {
+    const response = await axiosInstance.get("count_expired_iprogram");
+    return response.data.count;
+  },
+});
+
+
+  // Fetch Paid Count
+  const { data: countCheckin = [] } = useQuery({
+    queryKey: ["countCheckin"],
+    queryFn: async () => {
+      const response = await axiosInstance.get("count_checkin");
+      return response.data.count;
+    },
+  });
+
+   // Fetch Paid Count
+   const { data: paidSP = [] } = useQuery({
+    queryKey: ["paidSP"],
+    queryFn: async () => {
+      const response = await axiosInstance.get("count_paid_sp");
+      return response.data.count;
+    },
+  });
+
+   // Fetch Paid Count
+   const { data: countCheckinToday = [] } = useQuery({
+    queryKey: ["countCheckinToday"],
+    queryFn: async () => {
+      const response = await axiosInstance.get("count_paid_today");
+      return response.data.count;
+    },
+  });
+
+   // Fetch Paid Count
+   const { data: paidInterestProgramCount = [] } = useQuery({
+    queryKey: ["paidInterestProgramCount"],
+    queryFn: async () => {
+      const response = await axiosInstance.get("count_paid_iprogram");
+      return response.data.count;
+    },
+  });
+
+
   // Handle Check-in
   const checkInMutation = useMutation({
     mutationFn: async (id) => {
@@ -361,6 +424,13 @@ const { data: expiredCount = [] } = useQuery({
         expiredCount,
         paidCount,
         filters,
+        countCheckin, 
+        paidSP, 
+        countCheckinToday,
+        interestProgramCount, 
+        pendingInterestProgramCount, 
+        expiredInterestProgramCount, 
+        paidInterestProgramCount,
         setFilters,
         paymentManual,
     updatePaymentManual,

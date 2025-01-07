@@ -1,8 +1,12 @@
 import React, { useState, useEffect } from "react";
 import { useProspects } from "../../../context/ProspectContext";
 import moment from "moment";
+import { PiStudentBold } from "react-icons/pi"
 import Select from "react-select";
+import { RiPassExpiredLine } from "react-icons/ri";
 import {
+  MdPaid,
+  MdOutlinePendingActions,
   MdClose,
   MdCheck,
   MdWifiCalling1,
@@ -14,6 +18,7 @@ import { FcCallback } from "react-icons/fc";
 import SignUpModal from "../../components/SignUpModal";
 import { useProgram } from "../../../context/ProgramContext";
 import axiosInstance from "../../../api/axiosInstance";
+import Pagination from "../../components/Pagination";
 
 const INITIAL_FILTERS = {
   startDate: "",
@@ -25,9 +30,9 @@ const INITIAL_FILTERS = {
 };
 
 const STATUS_OPTIONS = [
-  { value: "0", label: "Pending" },
-  { value: "1", label: "Paid" },
-  { value: "2", label: "Expired" },
+  { value: 0, label: "Pending" },
+  { value: 1, label: "Paid" },
+  { value: 2, label: "Expired" },
 ];
 
 const FOLLOW_UP_OPTIONS = [
@@ -59,6 +64,19 @@ const formatLabel = (name) => {
   }
 };
 
+const Card = ({ card }) => (
+  <div className="col-12 col-sm-6 col-md-3">
+    <div className="card h-100 shadow-sm" role="button">
+      <div className="card-body d-flex flex-column align-items-center p-3">
+        <div className="mb-2">{card.icon}</div>
+        <h6 className="card-title mb-1">{card.title}</h6>
+        <p className="fw-bold mb-0">{card.count}</p>
+      </div>
+    </div>
+  </div>
+);
+
+
 const FilterInput = ({ name, value, onChange, options }) => {
   const label = formatLabel(name);
 
@@ -75,7 +93,7 @@ const FilterInput = ({ name, value, onChange, options }) => {
           <option value="">All</option>
           {STATUS_OPTIONS.map((option) => (
             <option key={option.value} value={option.value}>
-              {option.label}
+              {option.label} 
             </option>
           ))}
         </select>
@@ -169,7 +187,7 @@ const TableRow = ({ index, item, onSignUp, updateFU }) => {
         <td>{item.program_name}</td>
         <td>{item.city_name}</td>
         <td>
-          {STATUS_OPTIONS.find((opt) => opt.value === String(item.status))
+          {STATUS_OPTIONS.find((opt) => opt.value === item.status)
             ?.label || "N/A"}
         </td>
         <td>
@@ -206,7 +224,7 @@ const TableRow = ({ index, item, onSignUp, updateFU }) => {
 };
 const AdminInterestProgram = ({ setActiveDetail }) => {
   // const [showModal, setShowModal] = useState(false); // State untuk modal
-  const {intrprgprospects, updatePaymentManual , setIntrPrgProspects, loading, filterProspects, registerUser, updateProspect } =
+  const {intrprgprospects, updatePaymentManual , setIntrPrgProspects, loading, filterProspects , updateProspect,interestProgramCount, pendingInterestProgramCount, expiredInterestProgramCount, paidInterestProgramCount } =
     useProspects();
   const [filters, setFilters] = useState(INITIAL_FILTERS);
 
@@ -248,6 +266,40 @@ const handlePageChange = (newPage) => {
     setFilters((prev) => ({ ...prev, [name]: value }));
   };
 
+  const CARD_DATA = [
+      {
+        id: "totalnterestProgram",
+        icon: <PiStudentBold style={{ fontSize: "28px", color: "#4CAF50" }} />,
+        title: "Total Interest Program",
+        count: interestProgramCount ?? 0,
+      },
+      {
+        id: "pending",
+        icon: (
+          <MdOutlinePendingActions
+            style={{ fontSize: "28px", color: "#FFC107" }}
+          />
+        ),
+        title: "Pending",
+        count: pendingInterestProgramCount ?? 0,
+      },
+      {
+        id: "expired",
+        icon: (
+          <RiPassExpiredLine style={{ fontSize: "28px", color: "#F44336" }} />
+        ),
+        title: "Expired",
+        count: expiredInterestProgramCount ?? 0,
+      },
+      {
+        id: "paid",
+        icon: <MdPaid style={{ fontSize: "28px", color: "#2196F3" }} />,
+        title: "Paid",
+        count: paidInterestProgramCount ?? 0,
+      },
+    ];
+  
+
   const applyFilters = async () => {
     await filterProspects(filters);
   };
@@ -262,7 +314,6 @@ const handlePageChange = (newPage) => {
       payment_status: prospect?.payment_status,
       payment_method: prospect?.payment_method,
     }
-    // console.log("Data Update", prospect);
 
     updatePaymentManual(data);
 
@@ -279,7 +330,12 @@ const handlePageChange = (newPage) => {
 
   return (
     <div className="container-xxl flex-grow-1 container-p-y">
-      <div className="card mt-1">
+      <div className="row g-3">
+        {CARD_DATA.map((card) => (
+          <Card key={card.id} card={card} onClick={setActiveDetail} />
+        ))}
+      </div>
+      <div className="card mt-4">
         <div className="card-header">
           <h5>Filter</h5>
         </div>
@@ -305,7 +361,7 @@ const handlePageChange = (newPage) => {
 
       <div className="card mt-4">
         <div className="card-header text-white">
-          <h5 className="mb-0">List Peserta SP</h5>
+          <h5 className="mb-0">List Interest Program</h5>
         </div>
         <div className="card-body px-0">
           <div className="table-responsive">
@@ -318,7 +374,7 @@ const handlePageChange = (newPage) => {
                     "HP",
                     "Email",
                     "Program",
-                    "Branch",
+                    "City",
                     "Status",
                     "Tanggal SP",
                     "Source",
@@ -333,14 +389,14 @@ const handlePageChange = (newPage) => {
               </thead>
               <tbody>                           
               {loading ? (
-  <tr>
-    <td colSpan="11" className="text-center">
-      <div className="d-flex justify-content-center align-items-center">
-        <span>Loading data...</span>
-      </div>
-    </td>
-  </tr>
-) : paginatedProspects.length === 0 ? (
+                <tr>
+                  <td colSpan="11" className="text-center">
+                    <div className="d-flex justify-content-center align-items-center">
+                      <span>Loading data...</span>  
+                    </div>
+                  </td>
+                </tr>
+              ) : paginatedProspects.length === 0 ? (
                 <tr>
                   <td colSpan="11" className="text-center">
                     No data available
@@ -361,37 +417,12 @@ const handlePageChange = (newPage) => {
             
             </table>
           </div>
-          <nav className="d-flex justify-content-end mt-3 mx-3" aria-label="Page navigation">
-        <ul className="pagination pagination-rounded pagination-outline-primary">
-          <li className={`page-item ${currentPage === 1 ? "disabled" : ""}`}>
-            <button className="page-link" onClick={() => handlePageChange(1)}>
-              <i className="bx bx-chevrons-left"></i>
-            </button>
-          </li>
-          <li className={`page-item ${currentPage === 1 ? "disabled" : ""}`}>
-            <button className="page-link" onClick={() => handlePageChange(currentPage - 1)}>
-              <i className="bx bx-chevron-left"></i>
-            </button>
-          </li>
-          {[...Array(totalPages)].map((_, index) => (
-            <li key={index} className={`page-item ${currentPage === index + 1 ? "active" : ""}`}>
-              <button className="page-link" onClick={() => handlePageChange(index + 1)}>
-                {index + 1}
-              </button>
-            </li>
-          ))}
-          <li className={`page-item ${currentPage === totalPages || filteredProspects.length == 0 ? "disabled" : ""}`}>
-            <button className="page-link" onClick={() => handlePageChange(currentPage + 1)}>
-              <i className="bx bx-chevron-right"></i>
-            </button>
-          </li>
-          <li className={`page-item ${currentPage === totalPages || filteredProspects.length == 0  ? "disabled" : ""}`}>
-            <button className="page-link" onClick={() => handlePageChange(totalPages)}>
-              <i className="bx bx-chevrons-right"></i>
-            </button>
-          </li>
-        </ul>
-      </nav>
+        {paginatedProspects.length === 0 ? null :   <Pagination
+            currentPage={currentPage}
+            totalPages={totalPages}
+            filteredProspects={filteredProspects}
+            onPageChange={handlePageChange}
+          />}
         </div>
       </div>
     </div>
